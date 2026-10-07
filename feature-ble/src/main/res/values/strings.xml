@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scan_advertise_mode">Scan / advertise mode</string>
+    <string name="mode_low_power">Low Power (1000ms)</string>
+    <string name="mode_balanced">Balanced (250ms)</string>
+    <string name="mode_low_latency">Low Latency (100ms)</string>
+    <string name="advertise">Advertise</string>
+    <string name="scan">Scan</string>
+    <string name="hold_partial_wake_lock">Hold PARTIAL_WAKE_LOCK (test variable)</string>
+    <string name="btn_start">Start</string>
+    <string name="btn_stop">Stop</string>
+    <string name="btn_battery_opt">Battery opt.</string>
+    <string name="btn_export_csv">Export CSV</string>
+    <string name="status_idle">Idle</string>
+</resources>

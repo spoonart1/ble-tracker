@@ -1,11 +1,11 @@
 package com.spoonart1.blespoonart.core.service.config
 
 import android.content.Context
+import androidx.core.content.edit
 import java.security.SecureRandom
 import java.util.UUID
-import androidx.core.content.edit
 
-internal object Ble {
+object Ble {
     val SERVICE_UUID: UUID = UUID.fromString("7a1c0001-5b0e-4c3a-9d6e-0a1b2c3d4e5f")
 
     const val COMPANY_ID = 0xFFFF
@@ -16,11 +16,14 @@ internal object Ble {
     const val EXTRA_SCAN = "scan"
     const val EXTRA_WAKELOCK = "wakelock"
 
-    /** Peer considered LOST if not seen for this long. */
     const val LOST_TIMEOUT_MS = 15_000L
     const val HEARTBEAT_MS = 60_000L
 
-    val MODE_NAMES = arrayOf("LOW_POWER", "BALANCED", "LOW_LATENCY")
+    val MODE_NAMES = arrayOf(
+        "LOW_POWER",
+        "BALANCED",
+        "LOW_LATENCY"
+    )
 
     /** Random id generated once per install so peers can be told apart despite MAC rotation. */
     fun localId(ctx: Context): ByteArray {

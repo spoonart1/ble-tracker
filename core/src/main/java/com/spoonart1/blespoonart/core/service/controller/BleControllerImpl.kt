@@ -14,18 +14,19 @@ import android.content.Context
 import android.os.ParcelUuid
 import androidx.annotation.RequiresPermission
 import com.spoonart1.blespoonart.core.logger.EventLogger
+import com.spoonart1.blespoonart.core.logger.LiveLog
+import com.spoonart1.blespoonart.core.logger.Status
 import com.spoonart1.blespoonart.core.service.config.Ble
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
-
 
 @Singleton
 internal class BleControllerImpl @Inject constructor(
     @param:ApplicationContext private val context: Context,
     private val advertiser: BluetoothLeAdvertiser?,
     private val scanner: BluetoothLeScanner?,
-    private val logger: EventLogger
+    private val logger: EventLogger,
 ) : BleController {
 
     override fun startAdvertising(
@@ -51,7 +52,14 @@ internal class BleControllerImpl @Inject constructor(
             .addManufacturerData(Ble.COMPANY_ID, Ble.localId(context))
             .build()
 
-        advertiser.startAdvertising(settings, data, callback)
+        try {
+            advertiser.startAdvertising(settings, data, callback)
+        } catch (e: SecurityException) {
+            logger.log("ERROR", note = "advertising permission revoked: ${e.message}")
+            LiveLog.status = Status.Custom("Permission revoked: Please allow required Bluetooth permissions in App Info Settings.")
+        } catch (e: Exception) {
+            logger.log("ERROR", note = "advertising failed to start: ${e.message}")
+        }
     }
 
     override fun startScanning(
@@ -70,8 +78,15 @@ internal class BleControllerImpl @Inject constructor(
             .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
             .setReportDelay(0)
             .build()
-        scanner.startScan(filters, settings, callback)
-        logger.log("SCAN_STARTED")
+        try {
+            scanner.startScan(filters, settings, callback)
+            logger.log("SCAN_STARTED")
+        } catch (e: SecurityException) {
+            logger.log("ERROR", note = "scanning permission revoked: ${e.message}")
+            LiveLog.status = Status.Custom("Permission revoked: Please allow required Bluetooth/Location permissions in App Info Settings.")
+        } catch (e: Exception) {
+            logger.log("ERROR", note = "scanning failed to start: ${e.message}")
+        }
     }
 
     @RequiresPermission(Manifest.permission.BLUETOOTH_ADVERTISE)
@@ -85,9 +100,8 @@ internal class BleControllerImpl @Inject constructor(
     @RequiresPermission(Manifest.permission.BLUETOOTH_SCAN)
     override fun stopScan(callback: ScanCallback) {
         try {
-            scanner?.startScan(callback)
+            scanner?.stopScan(callback)
         } catch (_: Exception) {
         }
     }
-
 }

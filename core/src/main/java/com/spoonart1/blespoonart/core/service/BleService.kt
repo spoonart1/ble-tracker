@@ -14,6 +14,8 @@ import android.os.IBinder
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import com.spoonart1.blespoonart.core.logger.LiveLog
+import com.spoonart1.blespoonart.core.logger.Status
 import com.spoonart1.blespoonart.core.service.config.Ble
 import com.spoonart1.blespoonart.core.service.controller.BleController
 import dagger.hilt.android.AndroidEntryPoint
@@ -106,7 +108,13 @@ class BleService : Service() {
             .build()
         val type =
             if (Build.VERSION.SDK_INT >= 29) ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE else 0
-        ServiceCompat.startForeground(this, 1, n, type)
+        try {
+            ServiceCompat.startForeground(this, 1, n, type)
+        } catch (e: SecurityException) {
+            LiveLog.status = Status.Custom("Foreground Service permission error (${e.message}): Please allow required permissions in App Info Settings.")
+        } catch (e: Exception) {
+            LiveLog.status = Status.Custom("Failed to start foreground service: ${e.message}")
+        }
     }
 
     override fun onDestroy() {
