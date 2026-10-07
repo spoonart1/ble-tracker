@@ -36,8 +36,7 @@ class BleDashboardViewModel @Inject constructor() : ViewModel() {
     private fun startLogPoller() {
         viewModelScope.launch {
             while (isActive) {
-                val s = LiveLog.status
-                val statusString = when (s) {
+                val statusString = when (val s = LiveLog.status) {
                     is Status.Idle -> "Idle"
                     is Status.BluetoothOff -> "Bluetooth unavailable or off"
                     is Status.Custom -> s.message

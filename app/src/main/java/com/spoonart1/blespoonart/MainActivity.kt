@@ -1,6 +1,9 @@
 package com.spoonart1.blespoonart
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothManager
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -56,9 +59,20 @@ class MainActivity : ComponentActivity() {
     private val bgLocationLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
             if (isGranted) {
-                startCaptureSafely()
+                checkBluetoothAndStart()
             } else {
                 val msg = "Background location permission is required for background BLE scanning. Please enable it in App Info Settings."
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                viewModel.updateStatusMessage(msg)
+            }
+        }
+
+    private val enableBtLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                startCaptureSafely()
+            } else {
+                val msg = "Bluetooth is required to advertise and scan. Please enable Bluetooth."
                 Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
                 viewModel.updateStatusMessage(msg)
             }
@@ -129,11 +143,33 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** Android 10-11 need a separate "allow all the time" grant for background BLE scanning. */
     private fun maybeRequestBackgroundLocation() {
         val needsBg = Build.VERSION.SDK_INT in 29..30 &&
             ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) !=
             PackageManager.PERMISSION_GRANTED
-        if (needsBg) bgLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION) else startCaptureSafely()
+        if (needsBg) {
+            bgLocationLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+        } else {
+            checkBluetoothAndStart()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkBluetoothAndStart() {
+        val bluetoothManager = getSystemService(BLUETOOTH_SERVICE) as? BluetoothManager
+        val adapter = bluetoothManager?.adapter
+        if (adapter != null && !adapter.isEnabled) {
+            try {
+                enableBtLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
+            } catch (e: SecurityException) {
+                val msg = "Permission error (${e.message}): Unable to request Bluetooth enable."
+                Toast.makeText(this, msg, Toast.LENGTH_LONG).show()
+                viewModel.updateStatusMessage(msg)
+            }
+        } else {
+            startCaptureSafely()
+        }
     }
 
     private fun startCaptureSafely() {
